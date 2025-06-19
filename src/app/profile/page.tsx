@@ -3,7 +3,14 @@
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useState } from "react";
+import {
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+  useState,
+} from "react";
 import ProfileHeader from "@/components/ProfileHeader";
 import NoFitnessPlan from "@/components/NoFitnessPlan";
 import CornerElements from "@/components/CornerElements";
@@ -17,17 +24,28 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+interface PlanType {
+  // define properties of a plan here
+  name: string;
+  // ...other properties
+}
+
+interface UserPlans {
+  plans: PlanType[];
+}
+
 const ProfilePage = () => {
   const { user } = useUser();
   const userId = user?.id as string;
 
-  const allPlans = useQuery(api.plans.getUserPlans, { userId });
+  const allPlans = useQuery(api.plans?.getUserPlans, { userId });
+
   const [selectedPlanId, setSelectedPlanId] = useState<null | string>(null);
 
-  const activePlan = allPlans?.find((plan) => plan.isActive);
+  const activePlan = allPlans?.find((plan: { isActive: any }) => plan.isActive);
 
   const currentPlan = selectedPlanId
-    ? allPlans?.find((plan) => plan._id === selectedPlanId)
+    ? allPlans?.find((plan: { _id: string }) => plan._id === selectedPlanId)
     : activePlan;
 
   return (
@@ -50,24 +68,28 @@ const ProfilePage = () => {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {allPlans.map((plan) => (
-                <Button
-                  key={plan._id}
-                  onClick={() => setSelectedPlanId(plan._id)}
-                  className={`text-foreground border hover:text-white ${
-                    selectedPlanId === plan._id
-                      ? "bg-primary/20 text-primary border-primary"
-                      : "bg-transparent border-border hover:border-primary/50"
-                  }`}
-                >
-                  {plan.name}
-                  {plan.isActive && (
-                    <span className="ml-2 bg-green-500/20 text-green-500 text-xs px-2 py-0.5 rounded">
-                      ACTIVE
-                    </span>
-                  )}
-                </Button>
-              ))}
+              {allPlans.map(
+                (plan: { _id: string; name: string; isActive: boolean }) => (
+                  <Button
+                    key={plan._id}
+                    onClick={() =>
+                      setSelectedPlanId(plan._id?.toString() ?? null)
+                    }
+                    className={`text-foreground border hover:text-white ${
+                      selectedPlanId === plan._id
+                        ? "bg-primary/20 text-primary border-primary"
+                        : "bg-transparent border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {plan.name}
+                    {plan.isActive && (
+                      <span className="ml-2 bg-green-500/20 text-green-500 text-xs px-2 py-0.5 rounded">
+                        ACTIVE
+                      </span>
+                    )}
+                  </Button>
+                )
+              )}
             </div>
           </div>
 
@@ -114,7 +136,18 @@ const ProfilePage = () => {
 
                     <Accordion type="multiple" className="space-y-4">
                       {currentPlan.workoutPlan.exercises.map(
-                        (exerciseDay, index) => (
+                        (
+                          exerciseDay: {
+                            day: string;
+                            routines: {
+                              name: string;
+                              sets: string | number;
+                              reps: string | number;
+                              description?: string;
+                            }[];
+                          },
+                          index: Key | null | undefined
+                        ) => (
                           <AccordionItem
                             key={index}
                             value={exerciseDay.day}
@@ -134,7 +167,15 @@ const ProfilePage = () => {
                             <AccordionContent className="pb-4 px-4">
                               <div className="space-y-3 mt-2">
                                 {exerciseDay.routines.map(
-                                  (routine, routineIndex) => (
+                                  (
+                                    routine: {
+                                      name: string;
+                                      sets: string | number;
+                                      reps: string | number;
+                                      description?: string;
+                                    },
+                                    routineIndex: Key | null | undefined
+                                  ) => (
                                     <div
                                       key={routineIndex}
                                       className="border border-border rounded p-3 bg-background/50"
@@ -183,32 +224,124 @@ const ProfilePage = () => {
                     <div className="h-px w-full bg-border my-4"></div>
 
                     <div className="space-y-4">
-                      {currentPlan.dietPlan.meals.map((meal, index) => (
-                        <div
-                          key={index}
-                          className="border border-border rounded-lg overflow-hidden p-4"
-                        >
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="w-2 h-2 rounded-full bg-primary"></div>
-                            <h4 className="font-mono text-primary">
-                              {meal.name}
-                            </h4>
+                      {currentPlan.dietPlan.meals.map(
+                        (
+                          meal: {
+                            name:
+                              | string
+                              | number
+                              | bigint
+                              | boolean
+                              | ReactElement<
+                                  unknown,
+                                  string | JSXElementConstructor<any>
+                                >
+                              | Iterable<ReactNode>
+                              | ReactPortal
+                              | Promise<
+                                  | string
+                                  | number
+                                  | bigint
+                                  | boolean
+                                  | ReactPortal
+                                  | ReactElement<
+                                      unknown,
+                                      string | JSXElementConstructor<any>
+                                    >
+                                  | Iterable<ReactNode>
+                                  | null
+                                  | undefined
+                                >
+                              | null
+                              | undefined;
+                            foods: (
+                              | string
+                              | number
+                              | bigint
+                              | boolean
+                              | ReactPortal
+                              | ReactElement<
+                                  unknown,
+                                  string | JSXElementConstructor<any>
+                                >
+                              | Iterable<ReactNode>
+                              | Promise<
+                                  | string
+                                  | number
+                                  | bigint
+                                  | boolean
+                                  | ReactPortal
+                                  | ReactElement<
+                                      unknown,
+                                      string | JSXElementConstructor<any>
+                                    >
+                                  | Iterable<ReactNode>
+                                  | null
+                                  | undefined
+                                >
+                              | null
+                              | undefined
+                            )[];
+                          },
+                          index: Key | null | undefined
+                        ) => (
+                          <div
+                            key={index}
+                            className="border border-border rounded-lg overflow-hidden p-4"
+                          >
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-2 h-2 rounded-full bg-primary"></div>
+                              <h4 className="font-mono text-primary">
+                                {meal.name}
+                              </h4>
+                            </div>
+                            <ul className="space-y-2">
+                              {meal.foods.map(
+                                (
+                                  food:
+                                    | string
+                                    | number
+                                    | bigint
+                                    | boolean
+                                    | ReactElement<
+                                        unknown,
+                                        string | JSXElementConstructor<any>
+                                      >
+                                    | Iterable<ReactNode>
+                                    | ReactPortal
+                                    | Promise<
+                                        | string
+                                        | number
+                                        | bigint
+                                        | boolean
+                                        | ReactPortal
+                                        | ReactElement<
+                                            unknown,
+                                            string | JSXElementConstructor<any>
+                                          >
+                                        | Iterable<ReactNode>
+                                        | null
+                                        | undefined
+                                      >
+                                    | null
+                                    | undefined,
+                                  foodIndex: number
+                                ) => (
+                                  <li
+                                    key={foodIndex}
+                                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                                  >
+                                    <span className="text-xs text-primary font-mono">
+                                      {String(foodIndex + 1).padStart(2, "0")}
+                                    </span>
+                                    {food}
+                                  </li>
+                                )
+                              )}
+                            </ul>
                           </div>
-                          <ul className="space-y-2">
-                            {meal.foods.map((food, foodIndex) => (
-                              <li
-                                key={foodIndex}
-                                className="flex items-center gap-2 text-sm text-muted-foreground"
-                              >
-                                <span className="text-xs text-primary font-mono">
-                                  {String(foodIndex + 1).padStart(2, "0")}
-                                </span>
-                                {food}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   </div>
                 </TabsContent>
